@@ -1,20 +1,8 @@
 <?php
 
-use Laravel\Lumen\Http\Request;
-
 $router->group(['prefix' => 'user'], function () use ($router) {
-    $router->post('register', 'UserAuthController@register');
-    $router->get('register/verification/{token}', 'UserAuthController@verifyEmail');
-
     $router->post('login', 'UserAuthController@login');
     $router->post('logout', 'UserAuthController@logout');
-
-    $router->post('/password/forgot', 'UserPasswordController@forgot');
-    $router->post('/password/reset', 'UserPasswordController@reset');
-
-    $router->group(['middleware' => 'verify-email'], function ($router) {
-        // some routes need verified email permission.
-    });
 });
 
 $router->group(['middleware' => 'jwt-auth'], function () use ($router) {
@@ -36,11 +24,13 @@ $router->group(['middleware' => 'jwt-auth'], function () use ($router) {
     $router->delete('orders/{id}', 'OrderController@delete');
 
     $router->get('transactions', 'TransactionController@list');
-});
+    $router->get('transactions/{id}', 'TransactionController@view');
+    $router->put('transactions/{id}', 'TransactionController@update');
+    $router->delete('transactions/{id}', 'TransactionController@delete');
 
-$router->group(['middleware' => 'jwt-auth'], function ($router) {
-    // Protected route...
-    $router->get('protected', function (Request $request) use ($router) {
-        return "Authenticated";
-    });
+    $router->post('users', 'UserController@create');
+    $router->get('users', 'UserController@list');
+    $router->get('users/{id}', 'UserController@view');
+    $router->put('users/{id}', 'UserController@update');
+    $router->delete('users/{id}', 'UserController@delete');
 });

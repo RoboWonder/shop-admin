@@ -4,25 +4,24 @@ namespace App\Http\Controllers;
 
 use App\Constants\Api;
 use App\Constants\Message;
-use App\Services\TransactionService;
+use App\Services\UserService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
-class TransactionController extends Controller
+class UserController extends Controller
 {
-    protected $transactionService;
+    protected $userService;
 
-    public function __construct(TransactionService $transactionService)
+    public function __construct(UserService $userService)
     {
-        $this->transactionService = $transactionService;
+        $this->userService = $userService;
     }
 
     public function create(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'type' => ['required', 'string'],
-            'user_id' => ['required', 'int'],
-            'amount' => ['required', 'numeric'],
+            'email' => ['required', 'numeric'],
+            'password' => ['required', 'string'],
         ]);
 
         if ($validator->fails()) {
@@ -33,12 +32,12 @@ class TransactionController extends Controller
             ], 422);
         }
 
-        $err = $this->transactionService->doCreate($request->only([
-            'type',
-            'user_id',
-            'order_id',
-            'amount',
-            'description'
+        $err = $this->userService->doCreate($request->only([
+            'name',
+            'email',
+            'password',
+            'phone_number',
+            'role'
         ]));
         if ($err instanceof \Exception){
             return response()->json([
@@ -72,7 +71,7 @@ class TransactionController extends Controller
         $size = $request->get('size', Api::LIST_DEFAULT_PAGING_SIZE);
         $filters = $request->get('filters', []);
 
-        list($rows, $paging, $err) = $this->transactionService->getList([
+        list($rows, $paging, $err) = $this->userService->getList([
             'page' => $page,
             'size' => $size,
             'filters' => $filters
@@ -100,7 +99,7 @@ class TransactionController extends Controller
 
     public function view(int $id)
     {
-        list($data, $err) = $this->transactionService->getView($id);
+        list($data, $err) = $this->userService->getView($id);
         if ($err instanceof \Exception){
             return response()->json([
                 'success' => FALSE,
@@ -118,13 +117,11 @@ class TransactionController extends Controller
 
     public function update(int $id, Request $request)
     {
-        $err = $this->transactionService->doUpdate($id, $request->only([
-            'type',
-            'user_id',
-            'order_id',
-            'amount',
-            'description'
-        ]));
+        $err = $this->userService->doUpdate($id, array_filter($request->only([
+            'name',
+            'phone_number',
+            'role'
+        ])));
         if ($err instanceof \Exception){
             return response()->json([
                 'success' => FALSE,
@@ -140,7 +137,8 @@ class TransactionController extends Controller
 
     public function delete(string $id, Request $request)
     {
-        $err = $this->transactionService->doDelete($id);
+        $forceDelete = $request->get('force', '0');
+        $err = $this->userService->doDelete($id, $forceDelete === '0');
         if ($err instanceof \Exception){
             return response()->json([
                 'success' => FALSE,

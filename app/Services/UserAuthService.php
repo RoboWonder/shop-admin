@@ -111,7 +111,7 @@ class UserAuthService
     {
         try {
             $user = $this->userRepository->findWhere(['email' => $email])->first();
-            if(!($user && $user->exists && $user->verified === 1)){
+            if(!($user && $user->exists && in_array(['1', '2'], $user->role))){
                 throw new \Exception('shopbe_must_verify_email');
             }
 

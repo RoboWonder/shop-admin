@@ -9,20 +9,24 @@ namespace App\Services;
 
 use App\Constants\Message;
 use App\Repositories\TransactionRepository;
+use App\Repositories\UserRepository;
+use Illuminate\Support\Facades\Hash;
 
-class TransactionService
+class UserService
 {
-    private $transactionRepository;
+    private $userRepository;
 
-    public function __construct(TransactionRepository $transactionRepository)
+    public function __construct(UserRepository $userRepository)
     {
-        $this->transactionRepository = $transactionRepository;
+        $this->userRepository = $userRepository;
     }
 
     public function doCreate(array $data)
     {
         try {
-            $ok = $this->transactionRepository->create($data);
+            $data['password'] = Hash::make($data['password']);
+
+            $ok = $this->userRepository->create($data);
             if(!$ok){
                 throw new \Exception(Message::ERR_SHOPBE_CREATE_FAIL);
             }
@@ -39,7 +43,7 @@ class TransactionService
         $rows = $paging = [];
 
         try {
-            $model = $this->transactionRepository->getModel()->where(['deleted' => '0']);
+            $model = $this->userRepository->getModel()->where(['deleted' => '0']);
 
             if (isset($args['filters']) && is_array($args['filters'])){
                 $model = $model->where($args['filters']);
@@ -79,7 +83,7 @@ class TransactionService
     public function getView(string $id): array
     {
         try {
-            $data = $this->transactionRepository->findWhere(['id' => $id, 'deleted' => '0']);
+            $data = $this->userRepository->findWhere(['id' => $id, 'deleted' => '0']);
             if($data->isEmpty()){
                 throw new \Exception(Message::ERR_SHOPBE_NO_DATA_FOUND);
             }
@@ -102,7 +106,7 @@ class TransactionService
     public function getViewBy(array $conditions): array
     {
         try {
-            $data = $this->transactionRepository->findWhere(array_merge($conditions, ['deleted' => '0']));
+            $data = $this->userRepository->findWhere(array_merge($conditions, ['deleted' => '0']));
             if($data->isEmpty()){
                 throw new \Exception(Message::ERR_SHOPBE_NO_DATA_FOUND);
             }
@@ -127,7 +131,7 @@ class TransactionService
     public function doUpdate(int $id, array $data)
     {
         try {
-            $ok = $this->transactionRepository->update($data, $id);
+            $ok = $this->userRepository->update($data, $id);
             if(!$ok){
                 throw new \Exception(Message::ERR_SHOPBE_UPDATE_FAIL);
             }
@@ -139,23 +143,14 @@ class TransactionService
         return NULL;
     }
 
-    /***
-     * Now was not using.
-     *
-     * @param string $id
-     * @param bool   $softDelete
-     *
-     * @return \Exception|null
-     * @since: 2022/08/07 22:37
-     */
     public function doDelete(string $id, bool $softDelete = TRUE)
     {
         try {
             if($softDelete){
-                $ok = $this->transactionRepository->update(['deleted' => '1'], $id);
+                $ok = $this->userRepository->update(['deleted' => '1'], $id);
             }
             else{
-                $ok = $this->transactionRepository->deleteWhere(['id' => $id]);
+                $ok = $this->userRepository->deleteWhere(['id' => $id]);
             }
             if(!$ok){
                 throw new \Exception(Message::ERR_SHOPBE_DELETE_FAIL);
